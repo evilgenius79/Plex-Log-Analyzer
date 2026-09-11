@@ -1,0 +1,18 @@
+# generated reports
+*.html
+*.pdf
+summary*.json
+!examples/sample-report.html
+!examples/sample-summary.json
+
+# generated sample logs
+examples/sample-logs/
+
+# real logs - never commit these, they contain tokens, IPs and account names
+*.log
+*.log.[0-9]
+Plex Media Server Logs*.zip
+
+__pycache__/
+*.pyc
+.venv/

@@ -1,0 +1,490 @@
+{
+  "generated": "2026-09-11T18:53:10",
+  "window": {
+    "start": "2026-03-14T08:00:00",
+    "end": "2026-03-14T09:30:16.687000"
+  },
+  "lines": 4451,
+  "unparsed": 0,
+  "levels": {
+    "INFO": 16,
+    "DEBUG": 3087,
+    "WARN": 4,
+    "ERROR": 1341,
+    "CRITICAL": 3
+  },
+  "findings": [
+    {
+      "id": "db_corrupt",
+      "severity": "critical",
+      "title": "Library database reports corruption",
+      "count": 12,
+      "first": "2026-03-14T08:56:01.815000",
+      "last": "2026-03-14T08:59:01.406000"
+    },
+    {
+      "id": "db_backup_failed",
+      "severity": "critical",
+      "title": "Nightly database backup is failing",
+      "count": 2,
+      "first": "2026-03-14T08:58:18.162000",
+      "last": "2026-03-14T08:58:21.129000"
+    },
+    {
+      "id": "db_fixup_failed",
+      "severity": "high",
+      "title": "Scheduled database maintenance aborting",
+      "count": 2,
+      "first": "2026-03-14T08:58:29.800000",
+      "last": "2026-03-14T08:58:33.127000"
+    },
+    {
+      "id": "transcode_dir",
+      "severity": "high",
+      "title": "Transcode directory is not writable",
+      "count": 2,
+      "first": "2026-03-14T08:58:35.932000",
+      "last": "2026-03-14T08:58:41.160000"
+    },
+    {
+      "id": "transcoder_killed",
+      "severity": "high",
+      "title": "Transcoder processes killed by signal",
+      "count": 1,
+      "first": "2026-03-14T08:58:46.273000",
+      "last": "2026-03-14T08:58:46.273000"
+    },
+    {
+      "id": "transcoder_crash",
+      "severity": "high",
+      "title": "Transcoder process crashed mid-playback",
+      "count": 1,
+      "first": "2026-03-14T08:58:53.014000",
+      "last": "2026-03-14T08:58:53.014000"
+    },
+    {
+      "id": "server_crash",
+      "severity": "high",
+      "title": "Server session ended in a crash",
+      "count": 1,
+      "first": "2026-03-14T09:29:33.099000",
+      "last": "2026-03-14T09:29:33.099000"
+    },
+    {
+      "id": "recording_failed",
+      "severity": "medium",
+      "title": "Recording or live stream failed at the tuner",
+      "count": 1,
+      "first": "2026-03-14T08:48:12.593000",
+      "last": "2026-03-14T08:48:12.593000"
+    },
+    {
+      "id": "source_stall",
+      "severity": "medium",
+      "title": "Live source stopped feeding mid-session",
+      "count": 3,
+      "first": null,
+      "last": null
+    },
+    {
+      "id": "tuner_unreachable",
+      "severity": "medium",
+      "title": "Tuner did not answer on the network",
+      "count": 1,
+      "first": "2026-03-14T08:48:21.042000",
+      "last": "2026-03-14T08:48:21.042000"
+    },
+    {
+      "id": "handler_exception",
+      "severity": "medium",
+      "title": "API requests failing with unhandled exceptions",
+      "count": 1,
+      "first": "2026-03-14T08:59:01.406000",
+      "last": "2026-03-14T08:59:01.406000"
+    },
+    {
+      "id": "index_failed",
+      "severity": "low",
+      "title": "Media index / thumbnail generation failing on some parts",
+      "count": 2,
+      "first": "2026-03-14T08:59:10.214000",
+      "last": "2026-03-14T09:29:46.521000"
+    },
+    {
+      "id": "agent_no_match",
+      "severity": "low",
+      "title": "Metadata lookups returning nothing",
+      "count": 1,
+      "first": "2026-03-14T08:59:04.303000",
+      "last": "2026-03-14T08:59:04.303000"
+    },
+    {
+      "id": "webhook_failed",
+      "severity": "low",
+      "title": "Webhook deliveries failing",
+      "count": 1,
+      "first": "2026-03-14T08:51:45.573000",
+      "last": "2026-03-14T08:51:45.573000"
+    },
+    {
+      "id": "wal_recovery",
+      "severity": "low",
+      "title": "Database recovered from its write-ahead log at startup",
+      "count": 1,
+      "first": "2026-03-14T08:53:07.071000",
+      "last": "2026-03-14T08:53:07.071000"
+    },
+    {
+      "id": "plugin_framework",
+      "severity": "low",
+      "title": "Legacy plugin framework throwing exceptions",
+      "count": 2,
+      "first": "2026-03-14T09:29:59.930000",
+      "last": "2026-03-14T09:30:09.207000"
+    },
+    {
+      "id": "decoder_noise",
+      "severity": "info",
+      "title": "Decoder errors while transcoding source video",
+      "count": 1320,
+      "first": "2026-03-14T08:05:39.634000",
+      "last": "2026-03-14T09:00:23.067000"
+    }
+  ],
+  "http": {
+    "status": {
+      "200": 1440,
+      "204": 47,
+      "404": 20,
+      "401": 33
+    },
+    "bytes": 1456778862,
+    "endpoints": [
+      [
+        "GET /:/timeline",
+        545
+      ],
+      [
+        "GET /status/sessions",
+        195
+      ],
+      [
+        "GET /library/sections",
+        166
+      ],
+      [
+        "GET /photo/:/transcode",
+        164
+      ],
+      [
+        "GET /library/metadata/{id}",
+        160
+      ],
+      [
+        "GET /video/:/transcode/universal/session/{uuid}/base/{segment}.ts",
+        157
+      ],
+      [
+        "GET /hubs/continueWatching",
+        153
+      ]
+    ]
+  },
+  "sessions": [
+    {
+      "start": "Mar 14, 2026 11:00:00.000",
+      "key": "/livetv/sessions/00000000-0000-4000-8000-000000000001",
+      "session": "sample-session",
+      "transcode": "0000aaaa1111bbbb",
+      "user": "sampleuser",
+      "product": "Plex for Roku",
+      "platform": "Roku",
+      "device": "Living Room Player",
+      "address": "10.0.0.31",
+      "local": "0",
+      "relayed": "0",
+      "secure": "1",
+      "video_decision": "transcode",
+      "audio_decision": "copy",
+      "src_video": "mpeg2video",
+      "dst_video": "hevc",
+      "src_audio": "ac3",
+      "dst_audio": "ac3",
+      "protocol": "hls",
+      "container": "mpegts",
+      "target_bitrate": "8000",
+      "hw_requested": "1",
+      "hw_encode": "Nvidia (NVENC)",
+      "hw_decode": "",
+      "variants": 1,
+      "resolution": "1080",
+      "bitrate": "12000",
+      "origin": "livetv",
+      "channel": "EXAMPLE-TV",
+      "segments": 900,
+      "media_ms": 900900,
+      "span_ms": 1035000,
+      "median_window": 1000,
+      "p90_window": 1000,
+      "stalls": 3,
+      "stall_ms": 138000,
+      "burst": 1.001,
+      "live": true
+    },
+    {
+      "start": "Mar 14, 2026 08:12:00.000",
+      "key": "/livetv/sessions/00000000-0000-4000-8000-000000000001",
+      "session": "sample-session",
+      "transcode": "0000aaaa1111bbbb",
+      "user": "sampleuser",
+      "product": "Plex for Roku",
+      "platform": "Roku",
+      "device": "Living Room Player",
+      "address": "10.0.0.31",
+      "local": "0",
+      "relayed": "0",
+      "secure": "1",
+      "video_decision": "transcode",
+      "audio_decision": "copy",
+      "src_video": "mpeg2video",
+      "dst_video": "hevc",
+      "src_audio": "ac3",
+      "dst_audio": "ac3",
+      "protocol": "hls",
+      "container": "mpegts",
+      "target_bitrate": "8000",
+      "hw_requested": "1",
+      "hw_encode": "Nvidia (NVENC)",
+      "hw_decode": "",
+      "variants": 1,
+      "resolution": "1080",
+      "bitrate": "12000",
+      "origin": "livetv",
+      "channel": "EXAMPLE-TV",
+      "segments": 1800,
+      "media_ms": 1801800,
+      "span_ms": 1800000,
+      "median_window": 1000,
+      "p90_window": 1000,
+      "stalls": 0,
+      "stall_ms": 0,
+      "burst": 1.001,
+      "live": true
+    }
+  ],
+  "top_messages": [
+    {
+      "level": "ERROR",
+      "group": "Transcoder decoder",
+      "count": 219,
+      "pattern": "[Req#/Transcode/<id>] [mpeg#video @ <addr>] slice mismatch"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcoder decoder",
+      "count": 207,
+      "pattern": "[Req#/Transcode/<id>] [mpeg#video @ <addr>] invalid cbp -# at # #"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcoder decoder",
+      "count": 202,
+      "pattern": "[Req#/Transcode/<id>] [mpeg#video @ <addr>] mb incr damaged"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcoder decoder",
+      "count": 195,
+      "pattern": "[Req#/Transcode/<id>] [mpeg#video @ <addr>] skip with previntra"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcoder decoder",
+      "count": 169,
+      "pattern": "[Req#/Transcode/<id>] [mpeg#video @ <addr>] ac-tex damaged at # #"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcoder decoder",
+      "count": 168,
+      "pattern": "[Req#/Transcode/<id>] [mpeg#video @ <addr>] Warning MVs not available"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcoder decoder",
+      "count": 160,
+      "pattern": "[Req#/Transcode/<id>] [mpeg#video @ <addr>] Invalid mb type in P-frame at # #"
+    },
+    {
+      "level": "ERROR",
+      "group": "Database",
+      "count": 9,
+      "pattern": "[Req#] SQLITE#:<addr>, #, database disk image is malformed"
+    },
+    {
+      "level": "WARN",
+      "group": "Scanner / analysis",
+      "count": 1,
+      "pattern": "[UltraBlurProcessor] Failed to extract colours for item #"
+    },
+    {
+      "level": "ERROR",
+      "group": "Live TV / DVR",
+      "count": 1,
+      "pattern": "[Req#/LiveTV] Recording failed. Please check your tuner or antenna."
+    },
+    {
+      "level": "ERROR",
+      "group": "Network / remote access",
+      "count": 1,
+      "pattern": "HttpClient: Couldn't connect to server http:/<path>"
+    },
+    {
+      "level": "WARN",
+      "group": "Other",
+      "count": 1,
+      "pattern": "[Req#] Webhook: Error delivering payload to https:/<path> (#)"
+    },
+    {
+      "level": "ERROR",
+      "group": "Database",
+      "count": 1,
+      "pattern": "SQLITE#:<addr>, #, database corruption at line # of [#b#c#ee]"
+    },
+    {
+      "level": "ERROR",
+      "group": "Maintenance (Butler)",
+      "count": 1,
+      "pattern": "Butler: The database failed its integrity check, not backing up"
+    },
+    {
+      "level": "ERROR",
+      "group": "Maintenance (Butler)",
+      "count": 1,
+      "pattern": "Butler: wasn't able to back up your database"
+    },
+    {
+      "level": "ERROR",
+      "group": "Database",
+      "count": 1,
+      "pattern": "[Req#/Database optimization] Fixup threw an exception: database disk image is malformed"
+    },
+    {
+      "level": "ERROR",
+      "group": "Maintenance (Butler)",
+      "count": 1,
+      "pattern": "Butler: Uncaught exception running subtask BuildGracenoteCollections"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcode / streaming",
+      "count": 1,
+      "pattern": "IsDirWritable: directory '/transcode' is not writable"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcode / streaming",
+      "count": 1,
+      "pattern": "IsFileWritable: failed to create file '<path>"
+    },
+    {
+      "level": "ERROR",
+      "group": "Transcode / streaming",
+      "count": 1,
+      "pattern": "[Req#/Transcode] Conversion failed. The transcoder process crashed."
+    },
+    {
+      "level": "WARN",
+      "group": "Other",
+      "count": 1,
+      "pattern": "Terminated session # with reason Conversion failed"
+    },
+    {
+      "level": "ERROR",
+      "group": "Database",
+      "count": 1,
+      "pattern": "Got exception from request handler: sqlite#_statement_backend::prepare: database disk image is malformed"
+    },
+    {
+      "level": "WARN",
+      "group": "Metadata / agents",
+      "count": 1,
+      "pattern": "[MetadataAgent] Match request for 'Unknown Title' returned no metadata"
+    },
+    {
+      "level": "ERROR",
+      "group": "Other",
+      "count": 1,
+      "pattern": "[Req#] buildIndexFile: part has no video stream, extraction has failed after multiple previous retry attempts"
+    },
+    {
+      "level": "CRITICAL",
+      "group": "Other",
+      "count": 1,
+      "pattern": "Exception in thread named 'Startup' (most recent call last):"
+    },
+    {
+      "level": "CRITICAL",
+      "group": "Other",
+      "count": 1,
+      "pattern": "File \"Framework/core.py\", line #, in _run"
+    },
+    {
+      "level": "CRITICAL",
+      "group": "Other",
+      "count": 1,
+      "pattern": "Exception: Private handlers are no longer supported"
+    }
+  ],
+  "files": [
+    {
+      "name": "Plex Crash Uploader.log",
+      "kind": "Crash uploader",
+      "format": "pms",
+      "lines": 1,
+      "parsed": 1
+    },
+    {
+      "name": "Plex Media Scanner.log",
+      "kind": "Scanner",
+      "format": "pms",
+      "lines": 4,
+      "parsed": 4
+    },
+    {
+      "name": "Plex Media Server.1.log",
+      "kind": "Media Server",
+      "format": "pms",
+      "lines": 2689,
+      "parsed": 2689
+    },
+    {
+      "name": "Plex Media Server.log",
+      "kind": "Media Server",
+      "format": "pms",
+      "lines": 1752,
+      "parsed": 1752
+    },
+    {
+      "name": "Plex Transcoder Statistics.1.log",
+      "kind": "Transcoder session reports",
+      "format": "xml session report",
+      "lines": 5419,
+      "parsed": 1
+    },
+    {
+      "name": "Plex Transcoder Statistics.log",
+      "kind": "Transcoder session reports",
+      "format": "xml session report",
+      "lines": 10819,
+      "parsed": 1
+    },
+    {
+      "name": "PMS Plugin Logs/com.plexapp.system.log",
+      "kind": "Plugin / agent",
+      "format": "plugin",
+      "lines": 5,
+      "parsed": 5
+    }
+  ]
+}
