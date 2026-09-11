@@ -43,7 +43,7 @@ import zipfile
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 
-VERSION = "1.1"
+VERSION = "1.2"
 
 # ---------------------------------------------------------------------------
 # Line formats  (all three verified against real Plex output)
@@ -782,16 +782,10 @@ def parse_sessions(text, fname):
         widths = sorted(e - st for st, e in windows if e >= st)
         span = (max(e for _, e in windows) - min(st for st, _ in windows)) if windows else 0
         stalls = [(st, e - st) for st, e in windows if e - st > STALL_MS]
-        burst = None
-        if len(segs) > 25 and len(windows) >= 25:
-            head_media = sum(int(x.get("duration", "0") or 0) for x in segs[:25])
-            head_wall = windows[24][1] - windows[0][0]
-            burst = head_media / head_wall if head_wall else None
         s.update(segments=len(segs), media_ms=media_ms, span_ms=span,
                  median_window=(widths[len(widths) // 2] if widths else None),
                  p90_window=(widths[int(len(widths) * .9)] if widths else None),
                  stalls=len(stalls), stall_ms=sum(d for _, d in stalls),
-                 burst=burst,
                  live=(root.get("key", "").startswith("/livetv")
                        or s.get("origin") == "livetv"))
         out.append(s)
@@ -1674,7 +1668,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Turn Plex Media Server logs into a readable HTML report.")
     ap.add_argument("paths", nargs="+", help="log zip, Logs directory, or individual log files")
-    ap.add_argument("-o", "--out", default="plex-report.html", help="HTML output path")
+    ap.add_argument("-o", "--out", help="HTML output path (default plex-report.html; the "
+                    "packaged executable writes next to the input instead)")
     ap.add_argument("--pdf", help="also write a PDF (needs weasyprint, wkhtmltopdf or chromium)")
     ap.add_argument("--json", dest="json_out", help="also write a JSON summary")
     ap.add_argument("--since", help="only lines newer than this: 24h, 3d, 2w, or 2026-09-09")
@@ -1682,7 +1677,24 @@ def main(argv=None):
     ap.add_argument("--redact", action="store_true",
                     help="mask IP addresses, account names and email addresses "
                          "(auth tokens are always masked)")
+    frozen = bool(getattr(sys, "frozen", False))      # running as a PyInstaller build
+    if frozen and not (sys.argv[1:] if argv is None else argv):
+        # double-clicked with nothing to read: explain, and keep the window open
+        ap.print_help()
+        print("\nDrag a Plex log zip (or the Logs folder) onto plexreport, or run it from "
+              "a terminal with the path as an argument.")
+        pause()
+        return 2
     opts = ap.parse_args(argv)
+    interactive = frozen and opts.out is None
+    if opts.out is None:
+        opts.out = "plex-report.html"
+        if interactive:
+            # dragged onto the executable: the working directory is arbitrary, so put
+            # the report next to whatever was dropped
+            first = os.path.abspath(opts.paths[0].rstrip("/\\"))
+            stem = os.path.splitext(os.path.basename(first))[0] or "plex"
+            opts.out = os.path.join(os.path.dirname(first), stem + "-report.html")
 
     since = parse_since(opts.since)
     a = ingest(opts.paths, since=since, top=opts.top)
@@ -1706,7 +1718,18 @@ def main(argv=None):
         else:
             print("no PDF engine found - open the HTML and print to PDF, or "
                   "pip install weasyprint", file=sys.stderr)
+    if interactive:
+        import webbrowser
+        webbrowser.open("file://" + out)
+        pause()
     return 0
+
+
+def pause():
+    try:
+        input("\nPress Enter to close.")
+    except (EOFError, OSError):
+        pass
 
 
 if __name__ == "__main__":

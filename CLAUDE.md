@@ -14,7 +14,9 @@ run with `python3 plexreport.py`, so it must stay one file.
 
 ## Hard constraints
 
-- **Standard library only.** No pip dependencies, ever. Python 3.8+.
+- **Standard library only.** No pip dependencies, ever. Python 3.8+. PyInstaller is
+  used by the release workflow to package the script; it is a build tool, not an
+  import.
 - **Single file.** Don't split into a package.
 - **Self-contained HTML.** No CDN links, no external fonts, no build step. Inline CSS,
   inline SVG, a few lines of vanilla JS. It has to work offline and behind a proxy.
@@ -108,7 +110,7 @@ findings table without running 17 regexes over every DEBUG line. Keep the hot pa
 | `parse_sessions` | Transcoder Statistics XML |
 | `viewing_sessions` | rebuilds watch sessions from timeline events |
 | `CSS`, `render`, `activity_band`, `hourly_chart` | output |
-| `to_json`, `write_pdf`, `main` | side outputs and CLI |
+| `to_json`, `write_pdf`, `main`, `pause` | side outputs and CLI |
 
 ## Adding a findings rule
 
@@ -123,13 +125,38 @@ what you think broke. If the condition is logged below WARN, add a keyword to
 There is no test framework. The sample generator is the test:
 
 ```bash
+python3 examples/check_sample.py            # or, by hand:
 python3 examples/make_sample_logs.py examples/sample-logs
 python3 plexreport.py examples/sample-logs -o /tmp/t.html --json /tmp/t.json
 ```
 
 Expected: all 17 findings fire, 0 unparsed lines, 2 transcode sessions. If you add a rule,
-add a line to `make_sample_logs.py` that triggers it, so the count goes up and stays
-honest. The generated logs are fictional and deterministic (`random.seed`).
+add a line to `make_sample_logs.py` that triggers it and bump `EXPECTED` in
+`check_sample.py`, so the count goes up and stays honest. The generated logs are
+fictional and deterministic (`random.seed`). `.github/workflows/ci.yml` runs the same
+check on Python 3.8 through 3.13 on every push.
+
+After changing anything that alters the report, regenerate the shipped sample outputs
+so they match the code:
+
+```bash
+python3 examples/make_sample_logs.py examples/sample-logs
+python3 plexreport.py examples/sample-logs -o examples/sample-report.html --json examples/sample-summary.json
+rm -r examples/sample-logs
+```
+
+## Releases and the packaged build
+
+Pushing a tag `vX.Y` runs `.github/workflows/release.yml`: PyInstaller builds a one-file
+executable on Windows, Linux and macOS runners, `check_sample.py` is run against each
+binary, and the three are attached to a GitHub release with checksums. Keep `VERSION` in
+`plexreport.py` in step with the tag.
+
+When running frozen (`sys.frozen`), `main()` behaves slightly differently so drag-and-drop
+works without a terminal: with no arguments it prints help and waits for Enter; with an
+input but no `-o` it writes the report next to the input, opens it in the browser, and
+waits for Enter. Pass `-o` and none of that happens, so scripts and CI see the same
+behaviour as the `.py`.
 
 Check rendering at 390px and 1280px if you touch `CSS` or the chart functions. Charts use
 `preserveAspectRatio="none"` with a fixed CSS height, so **no `<text>` inside the SVG** —

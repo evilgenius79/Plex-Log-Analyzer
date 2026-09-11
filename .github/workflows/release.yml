@@ -1,0 +1,77 @@
+name: Release builds
+
+# Pushing a tag like v1.2 builds a standalone executable for Windows, Linux and
+# macOS with PyInstaller, checks each one against the sample logs, and attaches
+# them to a GitHub release for that tag. The script itself stays stdlib-only;
+# PyInstaller is a build-time tool here, not a runtime dependency.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.asset }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: plexreport-windows-x64.exe
+            built: dist/plexreport.exe
+          - os: ubuntu-latest
+            asset: plexreport-linux-x64
+            built: dist/plexreport
+          - os: macos-latest
+            asset: plexreport-macos-arm64
+            built: dist/plexreport
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+      - name: Build
+        run: pyinstaller --onefile --clean --name plexreport plexreport.py
+      - name: Check the build against the sample logs
+        shell: bash
+        run: python examples/check_sample.py "${{ matrix.built }}"
+      - name: Name the asset
+        shell: bash
+        run: mv "${{ matrix.built }}" "${{ matrix.asset }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+
+  release:
+    name: Attach to release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Checksums
+        run: |
+          cd assets
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "plexreport $TAG" --generate-notes --verify-tag
+          gh release upload "$TAG" assets/* --clobber

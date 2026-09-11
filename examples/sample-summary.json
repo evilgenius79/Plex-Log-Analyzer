@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-11T20:19:40",
+  "generated": "2026-09-11T21:51:09",
   "window": {
     "start": "2026-03-14T08:00:00",
     "end": "2026-03-14T09:30:16.687000"
@@ -228,7 +228,6 @@
       "p90_window": 1000,
       "stalls": 3,
       "stall_ms": 138000,
-      "burst": 1.001,
       "live": true
     },
     {
@@ -268,7 +267,6 @@
       "p90_window": 1000,
       "stalls": 0,
       "stall_ms": 0,
-      "burst": 1.001,
       "live": true
     }
   ],

@@ -16,3 +16,8 @@ Plex Media Server Logs*.zip
 __pycache__/
 *.pyc
 .venv/
+
+# packaged builds
+build/
+dist/
+*.spec

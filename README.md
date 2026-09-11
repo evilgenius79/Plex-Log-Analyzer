@@ -1,5 +1,8 @@
 # plexreport
 
+[![CI](https://github.com/evilgenius79/Plex-Log-Analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/evilgenius79/Plex-Log-Analyzer/actions/workflows/ci.yml)
+[![Release builds](https://github.com/evilgenius79/Plex-Log-Analyzer/actions/workflows/release.yml/badge.svg)](https://github.com/evilgenius79/Plex-Log-Analyzer/releases/latest)
+
 Turns Plex Media Server logs into a readable HTML report — findings ranked by
 severity, activity charts, playback and traffic statistics, and errors grouped by
 message pattern instead of dumped as a wall of text.
@@ -7,6 +10,8 @@ message pattern instead of dumped as a wall of text.
 Python 3.8+, standard library only. No pip install, no services, nothing to configure.
 
 ![The report on a desktop browser](examples/screenshot-desktop.png)
+
+<p align="center"><img src="examples/screenshot-mobile.png" width="320" alt="The Statistics section on a phone"></p>
 
 ## Try it without a server
 
@@ -21,6 +26,32 @@ python3 plexreport.py examples/sample-logs -o examples/sample-report.html
 `examples/sample-report.html` in this repo was built exactly that way. It doubles as a
 test: the sample deliberately contains one of everything, so all 17 findings rules
 should fire and the coverage section should report 0 unparsed lines.
+`python3 examples/check_sample.py` runs exactly that check, and CI runs it on every
+push against Python 3.8 through 3.13.
+
+## No Python? Download a build
+
+Each [release](https://github.com/evilgenius79/Plex-Log-Analyzer/releases/latest) ships
+a single-file executable for Windows (`plexreport-windows-x64.exe`), Linux
+(`plexreport-linux-x64`) and Apple Silicon macOS (`plexreport-macos-arm64`), built
+on GitHub's runners by the workflow in `.github/workflows/release.yml`, with a
+`SHA256SUMS.txt` next to them.
+
+**Drag and drop.** Drop the log zip (or the `Logs` folder) onto the executable. The
+report is written next to whatever you dropped, opens in your browser, and the
+window waits for Enter before closing. Run it from a terminal for the full set of
+options, exactly as with the script:
+
+```
+plexreport-windows-x64.exe "Plex Media Server Logs.zip" -o report.html --since 24h
+```
+
+**Things to know.** The builds are not code-signed. Windows SmartScreen will show
+"Windows protected your PC" the first time; *More info → Run anyway* gets past it.
+macOS will refuse to open an unsigned download until you `chmod +x` it and allow it
+under System Settings → Privacy & Security, or run `xattr -d com.apple.quarantine`
+on it. Some antivirus products flag PyInstaller executables on principle. If any of
+that is a problem, the script is the same tool and needs nothing but Python.
 
 ## Running it
 
