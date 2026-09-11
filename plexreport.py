@@ -118,9 +118,16 @@ def scrub(text, redact=False):
 
 def mask_ip(ip):
     parts = ip.split(".")
-    if parts[0] in ("10", "127") or ip.startswith("192.168.") or ip.startswith("172."):
+    try:
+        first, second = int(parts[0]), int(parts[1])
+    except (ValueError, IndexError):
+        return ip
+    private = (first in (10, 127) or (first == 192 and second == 168)
+               or (first == 172 and 16 <= second <= 31)
+               or (first == 169 and second == 254))
+    if private:
         return ip                      # private/loopback is not identifying
-    return parts[0] + "." + parts[1] + ".x.x"
+    return "%d.%d.x.x" % (first, second)
 
 
 # ---------------------------------------------------------------------------
@@ -180,8 +187,6 @@ def read_text(src):
 
 
 FILE_KINDS = [
-    ("pms plugin logs/", "Plugin / agent"),
-    ("plex media server.log", "Media Server"),
     ("plex media server", "Media Server"),
     ("plex transcoder statistics", "Transcoder session reports"),
     ("plex media scanner chapter thumbnails", "Scanner: chapter thumbnails"),
@@ -201,9 +206,12 @@ FILE_KINDS = [
 
 
 def classify_file(name):
-    low = name.lower()
+    low = name.replace("\\", "/").lower()
+    if "pms plugin logs/" in low:
+        return "Plugin / agent"
+    base = os.path.basename(low)          # the directory name must not decide the kind
     for needle, label in FILE_KINDS:
-        if needle in low:
+        if needle in base:
             return label
     return "Other"
 
@@ -211,6 +219,8 @@ def classify_file(name):
 def rotation_key(name):
     """Sort rotated logs oldest-first: Name.5.log .. Name.1.log .. Name.log"""
     base = os.path.basename(name)
+    if base.lower().endswith(".gz"):
+        base = base[:-3]
     m = re.search(r"\.(\d+)\.log$|\.log\.(\d+)$", base, re.I)
     idx = int(m.group(1) or m.group(2)) if m else 0
     stem = re.sub(r"\.(\d+)\.log$|\.log\.(\d+)$", "", base, flags=re.I)
@@ -426,7 +436,7 @@ class Agg:
         self.http_endpoint = Counter()
         self.http_client = Counter()
         self.http_user = Counter()
-        self.http_ms = []
+        self.http_ms = Counter()           # response ms -> occurrences
         self.http_bytes = 0
         self.bytes_hour = Counter()
         self.req_hour = Counter()
@@ -616,7 +626,7 @@ def handle_line(a, level, ts, msg, fname, kind):
                         a.views[(rk, client.rsplit(":", 1)[0])].append((ts, st))
             if ms:
                 v = int(ms.group(1))
-                a.http_ms.append(v)
+                a.http_ms[v] += 1
                 a.slow.append((v, method + " " + path[:120], ts, status))
                 if len(a.slow) > 4000:
                     a.slow.sort(reverse=True)
@@ -665,7 +675,7 @@ def handle_line(a, level, ts, msg, fname, kind):
     # --- playback decisions -------------------------------------------
     if "MDE:" in msg:
         t = RE_MDE_TITLE.search(msg)
-        if t and not t.group(1).startswith("E") or (t and " - " in t.group(1)):
+        if t and (not t.group(1).startswith("E") or " - " in t.group(1)):
             a.mde[t.group(1).strip()] += 1
         r = RE_MDE_REASON.search(msg)
         if r:
@@ -773,7 +783,7 @@ def parse_sessions(text, fname):
         span = (max(e for _, e in windows) - min(st for st, _ in windows)) if windows else 0
         stalls = [(st, e - st) for st, e in windows if e - st > STALL_MS]
         burst = None
-        if len(segs) > 25 and windows:
+        if len(segs) > 25 and len(windows) >= 25:
             head_media = sum(int(x.get("duration", "0") or 0) for x in segs[:25])
             head_wall = windows[24][1] - windows[0][0]
             burst = head_media / head_wall if head_wall else None
@@ -839,7 +849,9 @@ def ingest(paths, since=None, top=40):
                     a.continuation_lines += 1
                     continue
                 a.unparsed_lines += 1
-                a.unmatched_shape[signature(line.strip())[:120]] += 1
+                shape = signature(line.strip())[:120]
+                if shape in a.unmatched_shape or len(a.unmatched_shape) < 5000:
+                    a.unmatched_shape[shape] += 1
                 continue
             prev_ok = True
             nparsed += 1
@@ -1157,17 +1169,12 @@ def render(a, opts):
     add = P.append
 
     # ---- identity -----------------------------------------------------
-    ver = host = ""
+    ver = plat = host = ""
     for t, kind, v, extra, f in a.server_info:
         if kind == "Media Server" and not ver:
             ver, plat = v, extra
-        if kind == "host" and not host:
+        elif kind == "host" and not host:
             host = v
-    plat = ""
-    for t, kind, v, extra, f in a.server_info:
-        if kind == "Media Server":
-            plat = extra
-            break
 
     lo = a.core_min or a.tmin
     hi = a.core_max or a.tmax
@@ -1285,10 +1292,7 @@ def render(a, opts):
     watch_s = sum(v["seconds"] for v in vs)
     buffering = sum(v["buffering"] for v in vs)
     tc_media = sum(s.get("media_ms", 0) for s in a.sessions if s.get("live") is not False) / 1000.0
-    ms = sorted(a.http_ms)
-
-    def pct(p):
-        return ms[min(int(len(ms) * p), len(ms) - 1)] if ms else 0
+    timed = sum(a.http_ms.values())
 
     add('<div class=facts>')
     add('<div class=fact><b>%s</b><span>watched, across %d session%s</span></div>'
@@ -1309,13 +1313,14 @@ def render(a, opts):
     if a.req_hour:
         add("<h3>Requests per hour</h3>")
         add(hourly_chart(a.req_hour, lo, hi, "#7a8794", num, "requests per hour"))
-    if ms:
+    if timed:
         add("<h3>Response times</h3>")
-        add(rows([("Median", "%s ms" % num(pct(.5))), ("75th percentile", "%s ms" % num(pct(.75))),
-                  ("90th percentile", "%s ms" % num(pct(.90))),
-                  ("99th percentile", "%s ms" % num(pct(.99))),
-                  ("Longest", "%s ms" % num(ms[-1]))],
-                 ["Across %s timed requests" % num(len(ms)), "#Duration"]))
+        add(rows([("Median", "%s ms" % num(percentile(a.http_ms, .5))),
+                  ("75th percentile", "%s ms" % num(percentile(a.http_ms, .75))),
+                  ("90th percentile", "%s ms" % num(percentile(a.http_ms, .90))),
+                  ("99th percentile", "%s ms" % num(percentile(a.http_ms, .99))),
+                  ("Longest", "%s ms" % num(max(a.http_ms)))],
+                 ["Across %s timed requests" % num(timed), "#Duration"]))
         add('<p class=sub>The long tail is streaming and file downloads, which stay open while '
             'the client reads from them.</p>')
 
@@ -1420,9 +1425,8 @@ def render(a, opts):
     add('<h2 id=http>Requests</h2>')
     if a.http_status:
         total = sum(a.http_status.values())
-        ms = sorted(a.http_ms)
-        med = ms[len(ms) // 2] if ms else 0
-        p95 = ms[int(len(ms) * .95)] if ms else 0
+        med = percentile(a.http_ms, .5)
+        p95 = percentile(a.http_ms, .95)
         add('<div class=facts>'
             '<div class=fact><b>%s</b><span>completed requests</span></div>'
             '<div class=fact><b>%s</b><span>median response</span></div>'
@@ -1531,11 +1535,11 @@ def render(a, opts):
     add('<h2 id=files>Files read</h2>')
     frows = []
     for f in sorted(a.files, key=lambda f: (f["kind"], f["name"])):
-        pct = (100.0 * f["parsed"] / f["lines"]) if f["lines"] else 0
+        parsed_pct = (100.0 * f["parsed"] / f["lines"]) if f["lines"] else 0
         span = "%s to %s" % (ts_str(f["first"], "%b %d %H:%M"), ts_str(f["last"], "%b %d %H:%M")) \
             if f["first"] else (f["note"] or "-")
         frows.append((esc(f["name"]), esc(f["kind"]), esc(f["fmt"]),
-                      num(f["lines"]), "%.0f%%" % pct, esc(span)))
+                      num(f["lines"]), "%.0f%%" % parsed_pct, esc(span)))
     add(rows(frows, ["File", "Type", "Format matched", "#Lines", "#Parsed", "Time span"]))
 
     # ---- coverage -----------------------------------------------------
@@ -1566,9 +1570,26 @@ def render(a, opts):
 
 
 def dur_secs(sec):
+    sec = int(round(sec))
+    if sec >= 3600:
+        return "%dh %dm" % (sec // 3600, (sec % 3600) // 60)
     if sec >= 90:
-        return "%dm %ds" % (int(sec // 60), int(sec % 60))
-    return "%.0fs" % sec
+        return "%dm %ds" % (sec // 60, sec % 60)
+    return "%ds" % sec
+
+
+def percentile(counter, p):
+    """Nearest-rank percentile (p in 0..1) over a Counter of value -> occurrences."""
+    total = sum(counter.values())
+    if not total:
+        return 0
+    target = min(int(total * p), total - 1)
+    seen = 0
+    for v in sorted(counter):
+        seen += counter[v]
+        if seen > target:
+            return v
+    return v
 
 
 def human_bytes(n):
