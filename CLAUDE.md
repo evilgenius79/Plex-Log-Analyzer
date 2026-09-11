@@ -147,10 +147,11 @@ rm -r examples/sample-logs
 
 ## Releases and the packaged build
 
-Pushing a tag `vX.Y` runs `.github/workflows/release.yml`: PyInstaller builds a one-file
-executable on Windows, Linux and macOS runners, `check_sample.py` is run against each
-binary, and the three are attached to a GitHub release with checksums. Keep `VERSION` in
-`plexreport.py` in step with the tag.
+`.github/workflows/release.yml` builds a one-file executable with PyInstaller on Windows,
+Linux and macOS runners, runs `check_sample.py` against each binary, and attaches the
+three to a GitHub release with checksums. It runs when a `vX.Y` tag is pushed, or from
+the Actions tab with "Run workflow" and a tag name, which creates the tag on the chosen
+commit. Keep `VERSION` in `plexreport.py` in step with the tag.
 
 When running frozen (`sys.frozen`), `main()` behaves slightly differently so drag-and-drop
 works without a terminal: with no arguments it prints help and waits for Enter; with an
